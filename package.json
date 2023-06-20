@@ -1,0 +1,29 @@
+{
+  "name": "@aux4/db-oracle",
+  "version": "1.0.0",
+  "description": "Database CLI for Oracle",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/aux4/db-oracle.git"
+  },
+  "keywords": [
+    "aux4",
+    "database",
+    "cli",
+    "oracle"
+  ],
+  "author": "Aux4",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/aux4/db-oracle/issues"
+  },
+  "homepage": "https://github.com/aux4/db-oracle#readme",
+  "dependencies": {
+    "merge": "^2.1.1",
+    "oracledb": "^6.0.1"
+  }
+}
