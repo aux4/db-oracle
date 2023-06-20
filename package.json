@@ -1,6 +1,6 @@
 {
   "name": "@aux4/db-oracle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Database CLI for Oracle",
   "main": "index.js",
   "scripts": {
