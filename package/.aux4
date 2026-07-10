@@ -1,0 +1,156 @@
+{
+  "scope": "aux4",
+  "name": "db-oracle",
+  "version": "2.0.0",
+  "description": "oracle database tools",
+  "tags": [
+    "db",
+    "database",
+    "oracle"
+  ],
+  "dependencies": [
+    "aux4/db"
+  ],
+  "profiles": [
+    {
+      "name": "db",
+      "commands": [
+        {
+          "name": "oracle",
+          "execute": [
+            "profile:db:oracle"
+          ],
+          "help": {
+            "text": "oracle database tools"
+          }
+        }
+      ]
+    },
+    {
+      "name": "db:oracle",
+      "commands": [
+        {
+          "name": "execute",
+          "execute": [
+            "stdin:aux4 db driver prepare execute params(query, file, inputStream, tx, ignore) --params value(*) | node ${packageDir}/lib/aux4-db-oracle.js values(host, port, database, user, password)"
+          ],
+          "help": {
+            "text": "Execute a query on the oracle database",
+            "variables": [
+              {
+                "name": "host",
+                "text": "Database host",
+                "default": "localhost"
+              },
+              {
+                "name": "port",
+                "text": "Database port",
+                "default": "1521"
+              },
+              {
+                "name": "database",
+                "text": "Database service name",
+                "default": "XEPDB1"
+              },
+              {
+                "name": "user",
+                "text": "Database user",
+                "default": "system"
+              },
+              {
+                "name": "password",
+                "text": "Database password"
+              },
+              {
+                "name": "query",
+                "text": "SQL query to execute",
+                "default": "",
+                "arg": true
+              },
+              {
+                "name": "file",
+                "text": "SQL file to execute",
+                "default": ""
+              },
+              {
+                "name": "inputStream",
+                "text": "Read JSON input from stdin",
+                "default": "false"
+              },
+              {
+                "name": "tx",
+                "text": "Use transaction for batch operations",
+                "default": "false"
+              },
+              {
+                "name": "ignore",
+                "text": "Ignore errors and continue processing",
+                "default": "false"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stream",
+          "execute": [
+            "stdin:aux4 db driver prepare stream params(query, file, inputStream, tx, ignore) --params value(*) | node ${packageDir}/lib/aux4-db-oracle.js values(host, port, database, user, password)"
+          ],
+          "help": {
+            "text": "Execute a query on the oracle database and stream results",
+            "variables": [
+              {
+                "name": "host",
+                "text": "Database host",
+                "default": "localhost"
+              },
+              {
+                "name": "port",
+                "text": "Database port",
+                "default": "1521"
+              },
+              {
+                "name": "database",
+                "text": "Database service name",
+                "default": "XEPDB1"
+              },
+              {
+                "name": "user",
+                "text": "Database user",
+                "default": "system"
+              },
+              {
+                "name": "password",
+                "text": "Database password"
+              },
+              {
+                "name": "query",
+                "text": "SQL query to execute",
+                "default": ""
+              },
+              {
+                "name": "file",
+                "text": "SQL file to execute",
+                "default": ""
+              },
+              {
+                "name": "inputStream",
+                "text": "Read JSON input from stdin",
+                "default": "false"
+              },
+              {
+                "name": "tx",
+                "text": "Use transaction for batch operations",
+                "default": "false"
+              },
+              {
+                "name": "ignore",
+                "text": "Ignore errors and continue processing",
+                "default": "false"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

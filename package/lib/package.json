@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "oracledb": "^7.0.0"
+  }
+}
