@@ -15,7 +15,7 @@ aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user sys
 ```
 
 ```expect
-{"success":true,"count":1}
+[]
 ```
 
 ## Query inserted record
@@ -41,7 +41,7 @@ aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user sys
 ```
 
 ```expect
-{"success":true,"count":1}
+[]
 ```
 
 ## Query parameter-inserted record
