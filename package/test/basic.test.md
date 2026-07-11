@@ -315,7 +315,7 @@ aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user sys
 ### Test stream with --ignore flag and error
 
 ```execute
-aux4 db oracle stream --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "SELECT invalid_column FROM users LIMIT 1" --ignore
+aux4 db oracle stream --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "SELECT invalid_column FROM users" --ignore
 ```
 
 ```expect
@@ -323,7 +323,7 @@ aux4 db oracle stream --host localhost --port 1521 --database XEPDB1 --user syst
 ```
 
 ```error
-{"item":{},"query":"SELECT invalid_column FROM users LIMIT 1","error":"ORA-00904: \"INVALID_COLUMN\": invalid identifier"}
+{"item":{},"query":"SELECT invalid_column FROM users","error":"ORA-00904: \"INVALID_COLUMN\": invalid identifier"}
 ```
 
 ## Test dual table

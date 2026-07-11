@@ -21,8 +21,17 @@ function createErrorOutput(item, query, error) {
   return {
     item: item || null,
     query: query || 'unknown',
-    error: error
+    error: normalizeError(error)
   };
+}
+
+// oracledb 7 appends a "Help: https://docs.oracle.com/error-help/..." line to
+// error messages. Strip it so the driver emits a clean, version-stable message.
+function normalizeError(error) {
+  if (typeof error !== 'string') {
+    return error;
+  }
+  return error.replace(/\r?\nHelp:\s*https?:\/\/\S+\s*$/, '');
 }
 
 function filterAux4Params(params) {
