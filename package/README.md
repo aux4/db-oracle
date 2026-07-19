@@ -136,6 +136,158 @@ aux4 db oracle stream \
     --inputStream
 ```
 
+## Schema Introspection
+
+The introspection commands let you explore a database's structure — ideal for AI agents and scripts that need to discover tables and columns before querying. They reuse the same connection flags as `execute` (`--host`, `--port`, `--database`, `--user`, `--password`).
+
+**Scope is the schema (owner).** On Oracle the native namespace is the schema, which is the *owner* of an object — there is no separate "database" to list, so there is no `list databases`; use `list schemas` instead. The optional `--schema` flag chooses which owner `describe` and `list tables` inspect. When omitted (or empty) it defaults to the current user (`USER`), so you can point it at another owner without reconnecting.
+
+**Identifiers are stored UPPERCASE.** Oracle folds unquoted identifiers to uppercase, so table and column names live in the catalog as `PRODUCT`, `ID`, etc. `describe` uppercases the table name you pass (`--table product` matches `PRODUCT`), and `--schema` is uppercased the same way. Output *keys* stay lowercase (`name`, `type`, …) because the queries use quoted-lowercase aliases — without them node-oracledb would return uppercase keys.
+
+#### aux4 db oracle describe
+
+Return the columns of a table as a canonical JSON array, one object per column, in column order.
+
+Usage:
+```bash
+aux4 db oracle describe \
+  [--host <hostname>] \
+  [--port <port>] \
+  [--database <service_name>] \
+  [--user <username>] \
+  [--password <password>] \
+  [--schema <owner>] \
+  --table <table_name>
+```
+
+Options:
+
+- `--host <hostname>`     Database host (default: `localhost`)
+- `--port <port>`         Database port (default: `1521`)
+- `--database <service>`  Database service name (default: `XEPDB1`)
+- `--user <username>`     Database user (default: `system`)
+- `--password <password>` Database password
+- `--schema <owner>`      Schema (owner) to inspect (default: the current user)
+- `--table <table_name>`  Name of the table to describe (bound safely as a named parameter, matched UPPERCASE)
+
+Example:
+
+```bash
+aux4 db oracle describe \
+  --host localhost --port 1521 --database XEPDB1 --user system --password mypass \
+  --schema app --table product
+```
+
+```json
+[
+  {"name":"ID","type":"NUMBER","nullable":false,"key":"PRI","comment":"Unique product identifier"},
+  {"name":"NAME","type":"VARCHAR2","nullable":false,"comment":"Product display name"},
+  {"name":"PRICE","type":"NUMBER","nullable":true,"default":"0","comment":"Unit price in USD"}
+]
+```
+
+Column and table `name` values come back UPPERCASE — that is how Oracle stores unquoted identifiers. Only keys that carry a value are returned — `null` and empty (`""`) fields are omitted, so a plain column is just `{"name", "type", "nullable"}`. `nullable` is always present.
+
+#### aux4 db oracle desc
+
+Alias of `describe` — accepts the exact same flags and produces the exact same output.
+
+```bash
+aux4 db oracle desc \
+  --host localhost --port 1521 --database XEPDB1 --user system --password mypass \
+  --schema app --table product
+```
+
+#### aux4 db oracle list tables
+
+List the tables owned by a schema. Each row carries the table `name`, the `schema` (owner) it lives in (so an agent can fully qualify it), and the table `comment` when one is set.
+
+Usage:
+```bash
+aux4 db oracle list tables \
+  [--host <hostname>] \
+  [--port <port>] \
+  [--database <service_name>] \
+  [--user <username>] \
+  [--password <password>] \
+  [--schema <owner>]
+```
+
+Example:
+
+```bash
+aux4 db oracle list tables \
+  --host localhost --port 1521 --database XEPDB1 --user system --password mypass \
+  --schema app
+```
+
+```json
+[
+  {"name":"PRODUCT","schema":"APP","comment":"Catalog of products for sale"}
+]
+```
+
+As with `describe`, empty/`null` fields are omitted — a table with no comment is just `{"name", "schema"}`.
+
+#### aux4 db oracle list schemas
+
+List the schemas (users) on the server — the starting point for an agent that needs to discover a schema before drilling into its tables. On Oracle a schema *is* a user, so there is no separate `list databases`.
+
+Usage:
+```bash
+aux4 db oracle list schemas \
+  [--host <hostname>] \
+  [--port <port>] \
+  [--database <service_name>] \
+  [--user <username>] \
+  [--password <password>]
+```
+
+Example:
+
+```bash
+aux4 db oracle list schemas \
+  --host localhost --port 1521 --database XEPDB1 --user system --password mypass
+```
+
+```json
+[
+  {"name":"APP"},
+  {"name":"SYS"},
+  {"name":"SYSTEM"}
+]
+```
+
+The server's built-in schemas (`SYS`, `SYSTEM`, `XDB`, …) are included; filter them client-side if you only want application schemas.
+
+### Canonical Output Schema
+
+Introspection output uses a **fixed, dialect-independent** set of keys so that tooling works identically across every `aux4/db-*` adapter. A key is present only when it carries a value — `null` and empty (`""`) fields are omitted rather than emitted, keeping the output compact.
+
+`describe` — one object per column. When present, keys appear in this order:
+
+| Key | Type | Presence |
+|-----|------|----------|
+| `name` | string | always |
+| `type` | string | always — the Oracle data type (e.g. `NUMBER`, `VARCHAR2`) |
+| `nullable` | boolean | always — `true` if the column accepts `NULL`, else `false` |
+| `default` | string | only when the column has a default |
+| `key` | string | only when set — `PRI` for a primary-key column |
+| `comment` | string | only when the column has a comment |
+
+`list tables` — one object per table:
+
+| Key | Type | Presence |
+|-----|------|----------|
+| `name` | string | always |
+| `schema` | string | always — the schema (owner) the table lives in |
+| `comment` | string | only when the table has a comment |
+
+**Notes:**
+- `nullable` is a real JSON boolean (`true`/`false`) — never the string `"Y"`/`"N"` and never the number `1`/`0`.
+- `comment` carries the semantic description of the column or table, which is especially useful for AI agents exploring an unfamiliar schema.
+- `name`, `type`, and `nullable` are guaranteed on every `describe` row; everything else is present only when it has a value. This same schema is shared verbatim by the other `aux4/db-*` adapters (namespace naming follows each dialect: MySQL uses `database`; Postgres/MSSQL/Oracle use `schema`).
+
 ## Output Formats
 
 ### Execute Command Output

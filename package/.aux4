@@ -149,6 +149,184 @@
               }
             ]
           }
+        },
+        {
+          "name": "describe",
+          "execute": [
+            "set:tableName=${table}",
+            "stdin:aux4 db driver prepare execute --query \"SELECT c.column_name AS \\\"name\\\", c.data_type AS \\\"type\\\", CASE WHEN c.nullable='Y' THEN 1 ELSE 0 END AS \\\"nullable\\\", c.data_default AS \\\"default\\\", pk.keytype AS \\\"key\\\", cm.comments AS \\\"comment\\\" FROM all_tab_columns c LEFT JOIN all_col_comments cm ON cm.owner=c.owner AND cm.table_name=c.table_name AND cm.column_name=c.column_name LEFT JOIN (SELECT acc.owner, acc.table_name, acc.column_name, 'PRI' AS keytype FROM all_constraints ac JOIN all_cons_columns acc ON acc.owner=ac.owner AND acc.constraint_name=ac.constraint_name WHERE ac.constraint_type='P') pk ON pk.owner=c.owner AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.owner = COALESCE(NULLIF(UPPER(:schema),''), USER) AND c.table_name = UPPER(:tableName) ORDER BY c.column_id\" --params value(*) | node ${packageDir}/lib/aux4-db-oracle.js values(host, port, database, user, password) | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const t=d.trim();const o=t?JSON.parse(t).map(r=>{('nullable' in r)?(r.nullable=r.nullable?true:false):0;return Object.keys(r).reduce((a,k)=>{const v=r[k];[null,''].indexOf(v)<0?a[k]=v:0;return a},{});}):'';o?console.log(JSON.stringify(o)):0;});\""
+          ],
+          "help": {
+            "text": "Describe the columns of a table",
+            "variables": [
+              {
+                "name": "host",
+                "text": "Database host",
+                "default": "localhost"
+              },
+              {
+                "name": "port",
+                "text": "Database port",
+                "default": "1521"
+              },
+              {
+                "name": "database",
+                "text": "Database service name",
+                "default": "XEPDB1"
+              },
+              {
+                "name": "user",
+                "text": "Database user",
+                "default": "system"
+              },
+              {
+                "name": "password",
+                "text": "Database password"
+              },
+              {
+                "name": "schema",
+                "text": "Schema (owner) to target; defaults to the current user",
+                "default": ""
+              },
+              {
+                "name": "table",
+                "text": "Table name to describe"
+              }
+            ]
+          }
+        },
+        {
+          "name": "desc",
+          "execute": [
+            "aux4 db oracle describe params(host, port, database, user, password, schema, table)"
+          ],
+          "help": {
+            "text": "Describe the columns of a table (alias of describe)",
+            "variables": [
+              {
+                "name": "host",
+                "text": "Database host",
+                "default": "localhost"
+              },
+              {
+                "name": "port",
+                "text": "Database port",
+                "default": "1521"
+              },
+              {
+                "name": "database",
+                "text": "Database service name",
+                "default": "XEPDB1"
+              },
+              {
+                "name": "user",
+                "text": "Database user",
+                "default": "system"
+              },
+              {
+                "name": "password",
+                "text": "Database password"
+              },
+              {
+                "name": "schema",
+                "text": "Schema (owner) to target; defaults to the current user",
+                "default": ""
+              },
+              {
+                "name": "table",
+                "text": "Table name to describe"
+              }
+            ]
+          }
+        },
+        {
+          "name": "list",
+          "execute": [
+            "profile:db:oracle:list"
+          ],
+          "help": {
+            "text": "List database objects (tables, schemas, ...)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "db:oracle:list",
+      "commands": [
+        {
+          "name": "tables",
+          "execute": [
+            "stdin:aux4 db driver prepare execute --query \"SELECT t.table_name AS \\\"name\\\", t.owner AS \\\"schema\\\", cm.comments AS \\\"comment\\\" FROM all_tables t LEFT JOIN all_tab_comments cm ON cm.owner=t.owner AND cm.table_name=t.table_name WHERE t.owner = COALESCE(NULLIF(UPPER(:schema),''), USER) ORDER BY t.table_name\" --params value(*) | node ${packageDir}/lib/aux4-db-oracle.js values(host, port, database, user, password) | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const t=d.trim();const o=t?JSON.parse(t).map(r=>{('nullable' in r)?(r.nullable=r.nullable?true:false):0;return Object.keys(r).reduce((a,k)=>{const v=r[k];[null,''].indexOf(v)<0?a[k]=v:0;return a},{});}):'';o?console.log(JSON.stringify(o)):0;});\""
+          ],
+          "help": {
+            "text": "List the tables owned by the schema",
+            "variables": [
+              {
+                "name": "host",
+                "text": "Database host",
+                "default": "localhost"
+              },
+              {
+                "name": "port",
+                "text": "Database port",
+                "default": "1521"
+              },
+              {
+                "name": "database",
+                "text": "Database service name",
+                "default": "XEPDB1"
+              },
+              {
+                "name": "user",
+                "text": "Database user",
+                "default": "system"
+              },
+              {
+                "name": "password",
+                "text": "Database password"
+              },
+              {
+                "name": "schema",
+                "text": "Schema (owner) to target; defaults to the current user",
+                "default": ""
+              }
+            ]
+          }
+        },
+        {
+          "name": "schemas",
+          "execute": [
+            "stdin:aux4 db driver prepare execute --query \"SELECT username AS \\\"name\\\" FROM all_users ORDER BY username\" --params value(*) | node ${packageDir}/lib/aux4-db-oracle.js values(host, port, database, user, password) | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const t=d.trim();const o=t?JSON.parse(t).map(r=>{('nullable' in r)?(r.nullable=r.nullable?true:false):0;return Object.keys(r).reduce((a,k)=>{const v=r[k];[null,''].indexOf(v)<0?a[k]=v:0;return a},{});}):'';o?console.log(JSON.stringify(o)):0;});\""
+          ],
+          "help": {
+            "text": "List the schemas (users) on the server",
+            "variables": [
+              {
+                "name": "host",
+                "text": "Database host",
+                "default": "localhost"
+              },
+              {
+                "name": "port",
+                "text": "Database port",
+                "default": "1521"
+              },
+              {
+                "name": "database",
+                "text": "Database service name",
+                "default": "XEPDB1"
+              },
+              {
+                "name": "user",
+                "text": "Database user",
+                "default": "system"
+              },
+              {
+                "name": "password",
+                "text": "Database password"
+              }
+            ]
+          }
         }
       ]
     }

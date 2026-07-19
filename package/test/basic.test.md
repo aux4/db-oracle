@@ -339,3 +339,231 @@ aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user sys
   }
 ]
 ```
+
+# Schema Introspection
+
+```beforeAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "CREATE USER introspect_test IDENTIFIED BY testpass"
+```
+
+```beforeAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "ALTER USER introspect_test QUOTA UNLIMITED ON USERS"
+```
+
+```beforeAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "CREATE TABLE introspect_test.product (id NUMBER PRIMARY KEY, name VARCHAR2(100) NOT NULL, price NUMBER(10,2) DEFAULT 0, sku VARCHAR2(50))"
+```
+
+```beforeAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "CREATE TABLE introspect_test.tag (id NUMBER PRIMARY KEY)"
+```
+
+```beforeAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "COMMENT ON TABLE introspect_test.product IS 'Catalog of products for sale'"
+```
+
+```beforeAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "COMMENT ON COLUMN introspect_test.product.id IS 'Unique product identifier'"
+```
+
+```beforeAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "COMMENT ON COLUMN introspect_test.product.name IS 'Product display name'"
+```
+
+```beforeAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "COMMENT ON COLUMN introspect_test.product.price IS 'Unit price in USD'"
+```
+
+```afterAll
+aux4 db oracle execute --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --query "DROP USER introspect_test CASCADE"
+```
+
+## Describe a table
+
+### should return canonical column metadata, dropping null and empty fields
+
+```execute
+aux4 db oracle describe --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test --table product
+```
+
+```expect:json
+[
+  {
+    "name": "ID",
+    "type": "NUMBER",
+    "nullable": false,
+    "key": "PRI",
+    "comment": "Unique product identifier"
+  },
+  {
+    "name": "NAME",
+    "type": "VARCHAR2",
+    "nullable": false,
+    "comment": "Product display name"
+  },
+  {
+    "name": "PRICE",
+    "type": "NUMBER",
+    "nullable": true,
+    "default": "0",
+    "comment": "Unit price in USD"
+  },
+  {
+    "name": "SKU",
+    "type": "VARCHAR2",
+    "nullable": true
+  }
+]
+```
+
+### should match a table case-insensitively (identifiers are stored UPPERCASE)
+
+```execute
+aux4 db oracle describe --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test --table PRODUCT | jq -c 'map(.name)'
+```
+
+```expect
+["ID","NAME","PRICE","SKU"]
+```
+
+### should keep only present keys per row (null/empty dropped, in column order)
+
+```execute
+aux4 db oracle describe --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test --table product | jq -c 'map(keys_unsorted)'
+```
+
+```expect
+[["name","type","nullable","key","comment"],["name","type","nullable","comment"],["name","type","nullable","default","comment"],["name","type","nullable"]]
+```
+
+### should reduce a plain column to just name, type, nullable
+
+```execute
+aux4 db oracle describe --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test --table product | jq -c '.[3]'
+```
+
+```expect
+{"name":"SKU","type":"VARCHAR2","nullable":true}
+```
+
+### should never emit a null or empty-string value
+
+```execute
+aux4 db oracle describe --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test --table product | jq -c '[.[] | to_entries[] | .value] | map(select(. == null or . == "")) | length'
+```
+
+```expect
+0
+```
+
+### should emit nullable as a real JSON boolean (not "Y"/"N", not 1/0)
+
+```execute
+aux4 db oracle describe --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test --table product | jq -c 'map(.nullable | type)'
+```
+
+```expect
+["boolean","boolean","boolean","boolean"]
+```
+
+## Describe a table with the desc alias
+
+### should behave the same as describe
+
+```execute
+aux4 db oracle desc --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test --table product
+```
+
+```expect:json
+[
+  {
+    "name": "ID",
+    "type": "NUMBER",
+    "nullable": false,
+    "key": "PRI",
+    "comment": "Unique product identifier"
+  },
+  {
+    "name": "NAME",
+    "type": "VARCHAR2",
+    "nullable": false,
+    "comment": "Product display name"
+  },
+  {
+    "name": "PRICE",
+    "type": "NUMBER",
+    "nullable": true,
+    "default": "0",
+    "comment": "Unit price in USD"
+  },
+  {
+    "name": "SKU",
+    "type": "VARCHAR2",
+    "nullable": true
+  }
+]
+```
+
+## List tables
+
+### should list tables qualified by schema (owner), with comments when present
+
+```execute
+aux4 db oracle list tables --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test
+```
+
+```expect:json
+[
+  {
+    "name": "PRODUCT",
+    "schema": "INTROSPECT_TEST",
+    "comment": "Catalog of products for sale"
+  },
+  {
+    "name": "TAG",
+    "schema": "INTROSPECT_TEST"
+  }
+]
+```
+
+### should keep only present keys per row (empty comment dropped)
+
+```execute
+aux4 db oracle list tables --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test | jq -c 'map(keys_unsorted)'
+```
+
+```expect
+[["name","schema","comment"],["name","schema"]]
+```
+
+### should never emit a null or empty-string value
+
+```execute
+aux4 db oracle list tables --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test | jq -c '[.[] | to_entries[] | .value] | map(select(. == null or . == "")) | length'
+```
+
+```expect
+0
+```
+
+## List schemas
+
+### should include a user schema in the server listing
+
+```execute
+aux4 db oracle list schemas --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword | jq -c 'map(.name) | index("INTROSPECT_TEST") != null'
+```
+
+```expect
+true
+```
+
+### should return one canonical {name} object per schema
+
+```execute
+aux4 db oracle list schemas --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword | jq -c '[.[] | keys] | unique'
+```
+
+```expect
+[["name"]]
+```
