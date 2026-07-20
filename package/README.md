@@ -188,16 +188,6 @@ aux4 db oracle describe \
 
 Column and table `name` values come back UPPERCASE — that is how Oracle stores unquoted identifiers. Only keys that carry a value are returned — `null` and empty (`""`) fields are omitted, so a plain column is just `{"name", "type", "nullable"}`. `nullable` is always present.
 
-#### aux4 db oracle desc
-
-Alias of `describe` — accepts the exact same flags and produces the exact same output.
-
-```bash
-aux4 db oracle desc \
-  --host localhost --port 1521 --database XEPDB1 --user system --password mypass \
-  --schema app --table product
-```
-
 #### aux4 db oracle list tables
 
 List the tables owned by a schema. Each row carries the table `name`, the `schema` (owner) it lives in (so an agent can fully qualify it), and the table `comment` when one is set.

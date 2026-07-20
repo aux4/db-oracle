@@ -466,44 +466,6 @@ aux4 db oracle describe --host localhost --port 1521 --database XEPDB1 --user sy
 ["boolean","boolean","boolean","boolean"]
 ```
 
-## Describe a table with the desc alias
-
-### should behave the same as describe
-
-```execute
-aux4 db oracle desc --host localhost --port 1521 --database XEPDB1 --user system --password mysecretpassword --schema introspect_test --table product
-```
-
-```expect:json
-[
-  {
-    "name": "ID",
-    "type": "NUMBER",
-    "nullable": false,
-    "key": "PRI",
-    "comment": "Unique product identifier"
-  },
-  {
-    "name": "NAME",
-    "type": "VARCHAR2",
-    "nullable": false,
-    "comment": "Product display name"
-  },
-  {
-    "name": "PRICE",
-    "type": "NUMBER",
-    "nullable": true,
-    "default": "0",
-    "comment": "Unit price in USD"
-  },
-  {
-    "name": "SKU",
-    "type": "VARCHAR2",
-    "nullable": true
-  }
-]
-```
-
 ## List tables
 
 ### should list tables qualified by schema (owner), with comments when present

@@ -196,50 +196,6 @@
           }
         },
         {
-          "name": "desc",
-          "execute": [
-            "aux4 db oracle describe params(host, port, database, user, password, schema, table)"
-          ],
-          "help": {
-            "text": "Describe the columns of a table (alias of describe)",
-            "variables": [
-              {
-                "name": "host",
-                "text": "Database host",
-                "default": "localhost"
-              },
-              {
-                "name": "port",
-                "text": "Database port",
-                "default": "1521"
-              },
-              {
-                "name": "database",
-                "text": "Database service name",
-                "default": "XEPDB1"
-              },
-              {
-                "name": "user",
-                "text": "Database user",
-                "default": "system"
-              },
-              {
-                "name": "password",
-                "text": "Database password"
-              },
-              {
-                "name": "schema",
-                "text": "Schema (owner) to target; defaults to the current user",
-                "default": ""
-              },
-              {
-                "name": "table",
-                "text": "Table name to describe"
-              }
-            ]
-          }
-        },
-        {
           "name": "list",
           "execute": [
             "profile:db:oracle:list"
